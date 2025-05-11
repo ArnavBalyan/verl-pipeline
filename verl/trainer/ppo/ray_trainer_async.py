@@ -117,6 +117,7 @@ class RayPPOAsyncTrainer(RayPPOTrainer):
         batch: DataProto = DataProto.from_single_dict(batch_dict)
         batch.non_tensor_batch['uid'] = np.array([str(uuid.uuid4()) for _ in range(len(batch.batch))], dtype=object)
         if self.config.actor_rollout_ref.rollout.async_engine:
+            print("generate_sequences for ray_trainer_async120")
             gen_seq_generator = self.rollout_wg.generate_sequences_async(prompts=batch)
             outputs = []
             for item in gen_seq_generator:
@@ -148,6 +149,7 @@ class RayPPOAsyncTrainer(RayPPOTrainer):
                                     outputs.append(item)
                                 replay_queue.put(DataProto.concat(outputs))
                         # Get the generator function which will yield results as they complete
+                        print("generate_sequences for ray_trainer_async")
                         gen_seq_generator = self.rollout_wg.generate_sequences_async(prompts=sample_batch)
                         thread = threading.Thread(target=async_sampler, args=(gen_seq_generator, replay_queue))
                         thread.start()

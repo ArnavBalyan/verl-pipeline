@@ -702,6 +702,8 @@ class ActorRolloutRefWorker(Worker):
         Yields:
             DataProto: Generated sequence outputs as they complete
         """
+        print("generate_sequences for fsdp_worker")
+
         assert self._is_rollout, "generate_sequences_async requires rollout capability"
         assert hasattr(self.rollout, 'generate_sequences_async'), "Rollout engine must support generate_sequences_async"
         

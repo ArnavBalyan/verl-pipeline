@@ -107,6 +107,8 @@ class RayPPOPipelineTrainer(RayPPOTrainer):
                                     return
                                 q.put((batch_iter, gen_idx, item))     
                     # Get the generator function which will yield results as they complete
+
+                    print("generate_sequences for ray_trainer")
                     gen_seq_generator = self.rollout_wg.generate_sequences_async(prompts=batch)
                     thread = threading.Thread(target=create_replay_queue, args=(gen_seq_generator, replay_queue))
                     thread.start()

@@ -568,6 +568,8 @@ class RayPPOTrainer(object):
             test_batch_padded, pad_size = pad_dataproto_to_divisor(test_batch, validate_wg.world_size)
             
             if self.config.actor_rollout_ref.rollout.async_engine:
+                print("generate_sequences for ray_trainer571")
+
                 gen_seq_generator = validate_wg.generate_sequences_async(prompts=test_batch_padded)
                 outputs = []
                 for item in gen_seq_generator:
@@ -889,6 +891,7 @@ class RayPPOTrainer(object):
                             batch = self.actor_rollout_wg.generate_sequences(batch)
                         else:
                             #Get the generator function which will yield results as they complete
+                            print("generate_sequences for ray_trainer892")
                             gen_seq_generator = self.actor_rollout_wg.generate_sequences_async(prompts=batch)
                             # Collect outputs in a dict keyed by prompt_idx
                             outputs = []
