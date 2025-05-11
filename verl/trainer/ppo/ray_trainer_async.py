@@ -150,7 +150,14 @@ class RayPPOAsyncTrainer(RayPPOTrainer):
                                 replay_queue.put(DataProto.concat(outputs))
                         # Get the generator function which will yield results as they complete
                         print("generate_sequences for ray_trainer_async")
+                        from datetime import datetime
+                        import random
+                        unique_suffix = datetime.now().strftime('%Y%m%d_%H%M%S') + f"_{random.randint(1000, 9999)}"
+                        log_path = f"/root/gpu_sampling_log_async_{unique_suffix}.csv"
+                        monitor = GPUMonitor(log_path=log_path)
+
                         gen_seq_generator = self.rollout_wg.generate_sequences_async(prompts=sample_batch)
+                        monitor.start()
                         thread = threading.Thread(target=async_sampler, args=(gen_seq_generator, replay_queue))
                         thread.start()
                     else:                  
@@ -268,6 +275,9 @@ class RayPPOAsyncTrainer(RayPPOTrainer):
                     metrics.update(actor_output_metrics)
 
                     thread.join()
+                    monitor.stop()
+                    print(f"GPU sampling log saved to: {log_path}")
+
                     # last_iter_mini_batch_iter = (mini_batch_iter + last_iter_mini_batch_iter - 1) % ppo_step_minibatch_iter
                     with Timer('rollout_model_update', timing_raw):
                         updated_actor_module_fsdp_ref = self.actor_wg.get_state_dict()
