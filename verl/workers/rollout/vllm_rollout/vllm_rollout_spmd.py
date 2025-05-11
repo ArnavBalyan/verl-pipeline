@@ -418,8 +418,7 @@ class vLLMRollout(BaseRollout):
         """
         import traceback
         print("generate_sequences for fsdp_worker")
-        traceback.print_stack(file=sys.stderr)
-        sys.stderr.flush()
+        traceback.print_stack()
         assert self.config.async_engine, "generate_sequences_async requires async_engine=True"
         # rebuild vllm cache engine
         if vllm_version in ('0.3.1', '0.4.2', '0.5.4', '0.6.3') and self.config.free_cache_engine:
