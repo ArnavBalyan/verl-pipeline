@@ -161,7 +161,6 @@ class RayPPOAsyncTrainer(RayPPOTrainer):
                         thread = threading.Thread(target=sync_sampler, args=(replay_queue, sample_batch))
                         thread.start()
                     
-                    
                     ppo_train_batch_size = self.config.data.train_batch_size
                     ppo_mini_batch_size = self.config.actor_rollout_ref.actor.ppo_mini_batch_size
                     assert ppo_train_batch_size % ppo_mini_batch_size == 0, "PPO mini batch size must be a divisor of the total training batch size"
