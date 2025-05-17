@@ -39,17 +39,15 @@ def main_task(config, compute_score=None):
     # instantiate tokenizer
     tokenizer = hf_tokenizer(local_path)
 
-    actor_pool_id = 'actor_pool'
-    rollout_pool_id = 'rollout_pool'
-    num_training_gpus = config.trainer.n_training_gpus_per_node
+    unified_pool_id = 'gpu_pool'
+    total_gpus = config.trainer.n_gpus_per_node
     resource_pool_spec = {
-        actor_pool_id: [num_training_gpus] * config.trainer.nnodes,
-        rollout_pool_id: [config.trainer.n_gpus_per_node - num_training_gpus] * config.trainer.nnodes,
+        unified_pool_id: [total_gpus] * config.trainer.nnodes,
     }
     mapping = {
-        Role.Actor: actor_pool_id,
-        Role.Rollout: rollout_pool_id,
-        Role.RefPolicy: actor_pool_id,
+        Role.Actor: unified_pool_id,
+        Role.Rollout: unified_pool_id,
+        Role.RefPolicy: unified_pool_id,
     }
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
 
