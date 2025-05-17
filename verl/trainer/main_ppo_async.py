@@ -33,7 +33,7 @@ def run_ppo_pipeline(config, compute_score=None):
 def main_task(config, compute_score=None):
     pprint(OmegaConf.to_container(config, resolve=True))  # resolve=True will eval symbol values
     OmegaConf.resolve(config)
-
+    print("Unified pool setup")
     # download the checkpoint from hdfs
     local_path = copy_local_path_from_hdfs(config.actor_rollout_ref.model.path)
     # instantiate tokenizer
