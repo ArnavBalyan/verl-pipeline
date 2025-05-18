@@ -18,6 +18,8 @@ from verl.utils import hf_tokenizer
 from verl.utils.fs import copy_local_path_from_hdfs
 from verl.workers.fsdp_workers import ActorRolloutRefWorker
 from verl.workers.reward_manager import NaiveRewardManager
+from verl.trainer import SafeActorRolloutRefWorker
+
 
 @hydra.main(config_path='config', config_name='ppo_trainer', version_base=None)
 def main(config):
@@ -38,27 +40,30 @@ def main_task(config, compute_score=None):
     local_path = copy_local_path_from_hdfs(config.actor_rollout_ref.model.path)
     # instantiate tokenizer
     tokenizer = hf_tokenizer(local_path)
+    from verl.trainer import GpuSupervisor
+
+    GPU_SUPERVISORS = {
+        i: GpuSupervisor.options(name=f"sup_{i}",
+                                 lifetime="detached")
+                    .remote(gpu_index=i)
+        for i in range(config.trainer.n_gpus_per_node)
+    }
 
     unified_pool_id = 'gpu_pool'
     total_gpus = config.trainer.n_gpus_per_node
-    resource_pool_spec = {
-        unified_pool_id: [total_gpus] * config.trainer.nnodes,
-    }
-    mapping = {
-        Role.Actor: unified_pool_id,
-        Role.Rollout: unified_pool_id,
-        Role.RefPolicy: unified_pool_id,
-    }
-    resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
+    resource_pool_spec = {unified_pool_id: [total_gpus] * config.trainer.nnodes}
+    mapping = {Role.Actor: unified_pool_id,
+               Role.Rollout: unified_pool_id,
+               Role.RefPolicy: unified_pool_id}
+    resource_pool_manager = ResourcePoolManager(resource_pool_spec, mapping)
 
-
-    reward_fn = NaiveRewardManager(tokenizer=tokenizer, num_examine=0, compute_score=compute_score)
-    val_reward_fn = NaiveRewardManager(tokenizer=tokenizer, num_examine=1, compute_score=compute_score)
+    reward_fn      = NaiveRewardManager(tokenizer, num_examine=0, compute_score=compute_score)
+    val_reward_fn  = NaiveRewardManager(tokenizer, num_examine=1, compute_score=compute_score)
 
     role_worker_mapping = {
-        Role.Actor: ray.remote(ActorRolloutRefWorker),
-        Role.Rollout: ray.remote(ActorRolloutRefWorker),
-        Role.RefPolicy: ray.remote(ActorRolloutRefWorker)
+        Role.Actor:     ray.remote(SafeActorRolloutRefWorker),
+        Role.Rollout:   ray.remote(SafeActorRolloutRefWorker),
+        Role.RefPolicy: ray.remote(SafeActorRolloutRefWorker),
     }
 
     trainer = RayPPOAsyncTrainer(config=config,
