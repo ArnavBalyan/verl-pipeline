@@ -18,6 +18,7 @@ from verl.utils import hf_tokenizer
 from verl.utils.fs import copy_local_path_from_hdfs
 from verl.workers.fsdp_workers import ActorRolloutRefWorker
 from verl.workers.reward_manager import NaiveRewardManager
+print("update")
 from verl.trainer import SafeActorRolloutRefWorker
 
 
