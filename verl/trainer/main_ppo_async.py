@@ -33,21 +33,24 @@ def run_ppo_pipeline(config, compute_score=None):
 def main_task(config, compute_score=None):
     pprint(OmegaConf.to_container(config, resolve=True))  # resolve=True will eval symbol values
     OmegaConf.resolve(config)
-    print("Unified pool setup")
+    print("Non Unified pool setup")
     # download the checkpoint from hdfs
     local_path = copy_local_path_from_hdfs(config.actor_rollout_ref.model.path)
     # instantiate tokenizer
     tokenizer = hf_tokenizer(local_path)
 
-    unified_pool_id = 'gpu_pool'
-    total_gpus = config.trainer.n_gpus_per_node
+    actor_pool_id = 'actor_pool'
+    rollout_pool_id = 'rollout_pool'
+    num_training_gpus = config.trainer.n_training_gpus_per_node
+
     resource_pool_spec = {
-        unified_pool_id: [total_gpus] * config.trainer.nnodes,
+        actor_pool_id: [num_training_gpus] * config.trainer.nnodes,
+        rollout_pool_id: [config.trainer.n_gpus_per_node - num_training_gpus] * config.trainer.nnodes,
     }
     mapping = {
-        Role.Actor: unified_pool_id,
-        Role.Rollout: unified_pool_id,
-        Role.RefPolicy: unified_pool_id,
+        Role.Actor: actor_pool_id,
+        Role.Rollout: rollout_pool_id,
+        Role.RefPolicy: actor_pool_id,
     }
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
 
