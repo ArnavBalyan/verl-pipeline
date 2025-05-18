@@ -1,5 +1,6 @@
 from verl.workers.fsdp_workers import ActorRolloutRefWorker
-from verl.trainer import _MemPermit
+from verl.trainer.mem_permit import _MemPermit
+
 BYTES = 1024**3
 
 class SafeActorRolloutRefWorker(ActorRolloutRefWorker):
